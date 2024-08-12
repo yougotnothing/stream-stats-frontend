@@ -1,4 +1,5 @@
 # React + TypeScript + Vite
+[![My Skills](https://skillicons.dev/icons?i=react,tailwind,typescript,docker,vite,yarn)](https://skillicons.dev)
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
