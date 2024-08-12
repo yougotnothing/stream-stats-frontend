@@ -1,30 +1,99 @@
-# React + TypeScript + Vite
+# Stream stats
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![My Skills](https://skillicons.dev/icons?i=react,tailwind,typescript,docker,vite,yarn)](https://skillicons.dev)
 
-Currently, two official plugins are available:
+## Stream stats is a web application that can show you information and statistics on various streaming services such as: _Twitch_, _Trovo_, _Kick_, _Youtube_.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# Run application
 
-## Expanding the ESLint configuration
+### Create a dirrectory, and copy this repository in your dir, then, create a docker-compose.yml file and replace this code to him
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+`docker-compose.yml`
 
-- Configure the top-level `parserOptions` property like this:
+```yml
+services:
+  stream_stats_storage:
+    image: postgres:alpine
+    container_name: pg-storage
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+  stream_stats_frontend:
+    build:
+      context: ./stream-stats-frontend
+      dockerfile: DockerFile
+    container_name: react-app
+    ports:
+      - 3000:3000
+    volumes:
+      - ./stream-stats-frontend:/stream-stats-frontend
+      - node_modules:/stream-stats-frontend/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+      - VITE_HMR_PORT=${VITE_HMR_PORT}
+      - VITE_HMR_HOST=${VITE_HMR_HOST}
+    depends_on:
+      - stream_stats_backend
+    command: yarn dev
+
+  stream_stats_backend:
+    build:
+      context: ./stream-stats-api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: nestJS-api
+    ports:
+      - 5174:5174
+    volumes:
+      - ./stream-stats-api:/stream-stats-api
+      - /stream-stats-api/node_modules
+    depends_on:
+      - stream_stats_storage
+    environment:
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+      - POSTGRES_HOST=pg-storage
+      - POSTGRES_USERNAME=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=${POSTGRES_DB}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+    env_file:
+      - .env
+    tty: true
+    stdin_open: true
+
+volumes:
+  postgres_storage:
+  node_modules:
+  api:
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+# Nest step
+
+### If you already created a `docker-compose.yml` file, you must create another one file, named `.env` in the **_`root dir`_**
+
+`.env`
+
+```env
+POSTGRES_USER=... #your database username
+POSTGRES_PASSWORD=... #your database password
+POSTGRES_DB=... your database name (recommended value is "stream_stats_storage")
+POSTGRES_HOST=... # your database host (default is 'localhost')
+POSTGRES_PORT=... # your database port
+
+CHOKIDAR_USEPOLLING=true # for hmr
+
+VITE_HMR_PORT=3000
+VITE_HMR_HOST=localhost
+```
+
+# Next step
+
+### go to stream stats api repository, and check the installation and configuration guide
+
+[look for API!](https://github.com/yougotnothing/stream-stats-api)
